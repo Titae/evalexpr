@@ -1,0 +1,6 @@
+[package]
+name = "fun_evalexpr"
+version = "0.1.0"
+authors = ["Vinchenzo Guibert <vinchenzo.guibert@epitech.eu>"]
+
+[dependencies]
