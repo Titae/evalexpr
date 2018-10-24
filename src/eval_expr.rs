@@ -2,7 +2,7 @@ pub fn parse_float(exp: &str) -> (f32, &str) {
     let mut i = 0;
     let mut c = exp.chars().nth(i).unwrap();
     let mut keep: bool = true;
-    while keep && c.is_digit(10) || c == '.' {
+    while keep && c.is_digit(10) || c == '.' || c == '-' {
         i = i + 1;
         let x = exp.chars().nth(i);
         if x.is_none() {
