@@ -9,7 +9,7 @@ fn main() {
     match args.len() {
         2 => {
             let exp = &args[1];
-            println!("{}", eval_expr::evaluate(exp));
+            println!("{} = {}", exp, eval_expr::evaluate(exp));
         },
         //wrong argument number case
         _ => {
