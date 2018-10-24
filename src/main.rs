@@ -1,3 +1,5 @@
+mod eval_expr;
+
 fn print_usage() -> () {
     println!("USAGE:\n\t./fun_evalexpr expr\n\nDESCRIPTION:\n\texpr\tmathematical expression to be evaluated")
 }
@@ -7,7 +9,7 @@ fn main() {
     match args.len() {
         2 => {
             let exp = &args[1];
-            println!("Expression to evaluate : {}", exp);
+            println!("{}", eval_expr::evaluate(exp));
         },
         //wrong argument number case
         _ => {
