@@ -1,116 +1,219 @@
-fn parse_float(exp: &str) -> (f32, &str) {
-    let mut i = 0;
-    let mut c = exp.chars().nth(i).unwrap();
+use std::error::Error;
+use std::fmt;
+
+#[derive(Debug)]
+pub struct EvalExprError;
+
+impl fmt::Display for EvalExprError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+	write!(f, "Invalid expression")
+    }
+}
+
+impl Error for EvalExprError {
+    fn description(&self) -> &str {
+	"Invalid expression"
+    }
+
+    fn cause(&self) -> Option<&Error> {
+	None
+    }
+}
+
+fn parse_float(exp: &str) -> Result<(f64, &str), EvalExprError> {
+    let mut len = 0;
+    let mut c;
     let mut keep: bool = true;
+
+    match exp.chars().nth(len) {
+	None => return Err(EvalExprError),
+	Some(val) => c = val
+    };
     while keep && c.is_digit(10) || c == '.' {
-        i = i + 1;
-        let x = exp.chars().nth(i);
-        if x.is_none() {
-            keep = false;
-        } else {
-            c = x.unwrap();
-        }
+	len += 1;
+	match exp.chars().nth(len) {
+	    None => keep = false,
+	    Some(val) => c = val
+	};
     }
-    let num_len = i;
-    let num_sclice = &exp[..num_len];
-    let num: f32 = num_sclice.parse().unwrap();
-    let rest_slice = &exp[num_len..];
-    return (num, rest_slice);
+    let num_sclice = &exp[..len];
+    let rest_slice = &exp[len..];
+    match num_sclice.parse::<f64>() {
+	Err(_) => {
+	    Err(EvalExprError)
+	},
+	Ok(num) => {
+	    Ok((num, rest_slice))
+	}
+    }
 }
 
-fn parse_number(exp: &str) -> (f32, &str) {
+fn parse_number(exp: &str) -> Result<(f64, &str), EvalExprError> {
     let mut _exp = &exp[..];
-    if _exp.chars().nth(0).unwrap() == '(' {
-        _exp = &_exp[1..];
-        let (nbr, xp) = parse_sum(&_exp);
-        let mut _exp = xp;
-        if _exp.chars().nth(0).unwrap() == ')' {
-            _exp = &_exp[1..];
-        }
-        return (nbr, _exp);
+	
+    if _exp.chars().nth(0).is_none() {
+	return Err(EvalExprError);
+    } else if _exp.chars().nth(0).unwrap() == '(' {
+	let nbr;
+	_exp = &_exp[1..];
+	match parse_sum(&_exp) {
+	    Err(e) => return Err(e),
+	    Ok((num, exp)) => {
+		nbr = num;
+		_exp = exp;
+	    }
+	};
+	return match _exp.chars().nth(0) {
+	    Some(')') => {
+		_exp = &_exp[1..];
+		Ok((nbr, _exp))
+	    },
+	    _ => Err(EvalExprError)
+	};
     }
-    return parse_float(_exp);
+    match parse_float(_exp) {
+	Err(e) => {
+	    Err(e)
+	},
+	Ok((num, exp)) => {
+	    Ok((num, exp))
+	}
+    }
 }
 
-fn parse_sign(exp:&str, sign: bool) -> (f32, &str) {
-    let next_char = exp.chars().nth(0).unwrap();
+fn parse_sign(exp:&str, sign: bool) -> Result<(f64, &str), EvalExprError> {
+    let next_char;
     let mut new_sign = sign;
 
+    match exp.chars().nth(0) {
+	None => return Err(EvalExprError),
+	Some(val) => next_char = val
+    };
+
     if next_char == '-' {
-        new_sign = !sign;
+	new_sign = !sign;
     } else if next_char == '+' {
     } else {
-        let (mut num, new_exp) = parse_number(&exp);
-        if !new_sign {
-            num = -num;
-        }
-        return (num, new_exp);
+	return match parse_number(&exp) {
+	    Err(e) => Err(e),
+	    Ok((mut num, new_exp)) => {
+		if !new_sign {
+		    num = -num;
+		}
+		Ok((num, new_exp))
+	    }
+	}
     }
-    return parse_sign(&exp[1..], new_sign);
+    parse_sign(&exp[1..], new_sign)
 }
 
-fn parse_pow(exp: &str) -> (f32, &str) {
-    let (a, _exp) = parse_sign(exp, true);
-    let mut _exp = _exp;
-    let mut a = a;
-    while _exp.is_empty() == false {
+fn parse_pow(exp: &str) -> Result<(f64, &str), EvalExprError> {
+    let mut a;
+    let mut _exp;
+    match parse_sign(exp, true) {
+	Err(e) => return Err(e),
+	Ok((num, new_exp)) => {
+	    a = num;
+            _exp = new_exp;
+        }
+    };
+
+    while !_exp.is_empty() {
         let op = _exp.chars().nth(0).unwrap();
         if op != '^' {
-            return (a, _exp);
+            return Ok((a, _exp));
         }
         _exp = &_exp[1..];
-        let (b, new_exp) = parse_sign(_exp, true);
-        _exp = new_exp;
+        let b;
+        match parse_sign(_exp, true) {
+            Err(e) => return Err(e),
+            Ok((num, new_exp)) => {
+                b = num;
+                _exp = new_exp;
+            }
+        };
         a = a.powf(b);
     }
-    return (a, _exp);
+    Ok((a, _exp))
 }
 
-fn parse_factors(exp: &str) -> (f32, &str) {
-    let (a, _exp) = parse_pow(exp);
-    let mut _exp = _exp;
-    let mut a = a;
-    while _exp.is_empty() == false {
+fn parse_factors(exp: &str) -> Result<(f64, &str), EvalExprError> {
+    let mut a;
+    let mut _exp;
+    match parse_pow(exp) {
+        Err(e) => return Err(e),
+        Ok((num, new_exp)) => {
+            a = num;
+            _exp = new_exp;
+        }
+    };
+
+    while !_exp.is_empty() {
         let op = _exp.chars().nth(0).unwrap();
         if op != '*' && op != '/' && op != '%' {
-            return (a, _exp);
+            return Ok((a, _exp));
         }
         _exp = &_exp[1..];
-        let (b, new_exp) = parse_pow(_exp);
-        _exp = new_exp;
-        if op == '%' {
-            a = a % b;
-        } else if op == '/'{
-            a = a / b;
+        let b;
+        match parse_pow(_exp) {
+            Err(e) => return Err(e),
+            Ok((num, new_exp)) => {
+                b = num;
+                _exp = new_exp;
+            }
+        };
+        a = if op == '%' {
+            a % b
+        } else if op == '/' {
+            a / b
         } else {
-            a = a * b;
+            a * b
         }
     }
-    return (a, _exp);
+    Ok((a, _exp))
 }
 
-fn parse_sum(exp: &str) -> (f32, &str) {
-    let (a, _exp) = parse_factors(exp);
-    let mut a = a;
-    let mut _exp = _exp;
+fn parse_sum(exp: &str) -> Result<(f64, &str), EvalExprError> {
+    let mut a;
+    let mut _exp;
+    match parse_factors(exp) {
+        Err(e) => return Err(e),
+        Ok((num, new_exp)) => {
+            a = num;
+            _exp = new_exp;
+        }
+    };
+
     while _exp.len() > 0 {
+        let b;
         let op = _exp.chars().nth(0).unwrap();
         if op != '+' && op != '-' {
-            return (a, _exp);
+            return Ok((a, _exp));
         }
         _exp = &_exp[1..];
-        let (b, new_exp) = parse_factors(_exp);
-        _exp = new_exp;
-        if op == '+' {
-            a = a + b;
+        match parse_factors(_exp) {
+            Err(e) => return Err(e),
+            Ok((num, new_exp)) => {
+                b = num;
+                _exp = new_exp;
+            }
+        };
+        a = if op == '+' {
+            a + b
         } else {
-            a = a - b;
+            a - b
         }
     }
-    return (a, _exp);
+    Ok((a, _exp))
 }
 
-pub fn evaluate(exp: &str) -> f32 {
-    let res = parse_sum(&exp.replace(" ", "")[..]).0;
-    return (res * 100.).round() / 100.;
+pub fn evaluate(exp: &str) -> Result<f64, EvalExprError> {
+    match parse_sum(&exp.replace(" ", "")[..]) {
+        Err(e) => {
+            Err(e)
+        },
+        Ok((res, _)) => {
+            Ok((res * 100.).round() / 100.)
+        }
+    }
 }
