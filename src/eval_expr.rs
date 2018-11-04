@@ -1,15 +1,7 @@
-pub fn parse_float(exp: &str) -> (f32, &str) {
+fn parse_float(exp: &str) -> (f32, &str) {
     let mut i = 0;
     let mut c = exp.chars().nth(i).unwrap();
     let mut keep: bool = true;
-    let mut sign = 1_f32;
-    let mut minus = false;
-    if c == '-' {
-        sign = -1_f32;
-        i += 1;
-        c = exp.chars().nth(i).unwrap();
-        minus = true;
-    }
     while keep && c.is_digit(10) || c == '.' {
         i = i + 1;
         let x = exp.chars().nth(i);
@@ -20,18 +12,11 @@ pub fn parse_float(exp: &str) -> (f32, &str) {
         }
     }
     let num_len = i;
-    let num_slice: &str;
-    if minus == false {
-        num_slice = &exp[..num_len];
-    } else {
-        num_slice = &exp[1..num_len];
-    }
-    let num: f32 = num_slice.parse().unwrap();
+    let num_sclice = &exp[..num_len];
+    let num: f32 = num_sclice.parse().unwrap();
     let rest_slice = &exp[num_len..];
-    return (sign * num, rest_slice);
+    return (num, rest_slice);
 }
-
-
 
 fn parse_number(exp: &str) -> (f32, &str) {
     let mut _exp = &exp[..];
@@ -47,8 +32,25 @@ fn parse_number(exp: &str) -> (f32, &str) {
     return parse_float(_exp);
 }
 
+fn parse_sign(exp:&str, sign: bool) -> (f32, &str) {
+    let next_char = exp.chars().nth(0).unwrap();
+    let mut new_sign = sign;
+
+    if next_char == '-' {
+        new_sign = !sign;
+    } else if next_char == '+' {
+    } else {
+        let (mut num, new_exp) = parse_number(&exp);
+        if !new_sign {
+            num = -num;
+        }
+        return (num, new_exp);
+    }
+    return parse_sign(&exp[1..], new_sign);
+}
+
 fn parse_factors(exp: &str) -> (f32, &str) {
-    let (a, _exp) = parse_number(exp);
+    let (a, _exp) = parse_sign(exp, true);
     let mut _exp = _exp;
     let mut a = a;
     while _exp.is_empty() == false {
@@ -57,7 +59,7 @@ fn parse_factors(exp: &str) -> (f32, &str) {
             return (a, _exp);
         }
         _exp = &_exp[1..];
-        let (b, new_exp) = parse_number(_exp);
+        let (b, new_exp) = parse_sign(_exp, true);
         _exp = new_exp;
         if op == '%' {
             a = a % b;
@@ -85,7 +87,6 @@ fn parse_sum(exp: &str) -> (f32, &str) {
         if op == '+' {
             a = a + b;
         } else {
-            println!("a = a - b : {} = {} - {}", a, a, b);
             a = a - b;
         }
     }
