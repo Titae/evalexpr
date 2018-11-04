@@ -1,24 +1,9 @@
-use std::error::Error;
-use std::fmt;
 
-#[derive(Debug)]
-pub struct EvalExprError;
+#[cfg(test)]
+mod tests;
 
-impl fmt::Display for EvalExprError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-	write!(f, "Invalid expression")
-    }
-}
-
-impl Error for EvalExprError {
-    fn description(&self) -> &str {
-	"Invalid expression"
-    }
-
-    fn cause(&self) -> Option<&Error> {
-	None
-    }
-}
+mod error;
+pub use self::error::EvalExprError;
 
 fn parse_float(exp: &str) -> Result<(f64, &str), EvalExprError> {
     let mut len = 0;
@@ -26,58 +11,58 @@ fn parse_float(exp: &str) -> Result<(f64, &str), EvalExprError> {
     let mut keep: bool = true;
 
     match exp.chars().nth(len) {
-	None => return Err(EvalExprError),
-	Some(val) => c = val
+        None => return Err(EvalExprError),
+        Some(val) => c = val
     };
     while keep && c.is_digit(10) || c == '.' {
-	len += 1;
-	match exp.chars().nth(len) {
-	    None => keep = false,
-	    Some(val) => c = val
-	};
+        len += 1;
+        match exp.chars().nth(len) {
+            None => keep = false,
+            Some(val) => c = val
+        };
     }
     let num_sclice = &exp[..len];
     let rest_slice = &exp[len..];
     match num_sclice.parse::<f64>() {
-	Err(_) => {
-	    Err(EvalExprError)
-	},
-	Ok(num) => {
-	    Ok((num, rest_slice))
-	}
+        Err(_) => {
+            Err(EvalExprError)
+        },
+        Ok(num) => {
+            Ok((num, rest_slice))
+        }
     }
 }
 
 fn parse_number(exp: &str) -> Result<(f64, &str), EvalExprError> {
     let mut _exp = &exp[..];
-	
+
     if _exp.chars().nth(0).is_none() {
-	return Err(EvalExprError);
+        return Err(EvalExprError);
     } else if _exp.chars().nth(0).unwrap() == '(' {
-	let nbr;
-	_exp = &_exp[1..];
-	match parse_sum(&_exp) {
-	    Err(e) => return Err(e),
-	    Ok((num, exp)) => {
-		nbr = num;
-		_exp = exp;
-	    }
-	};
-	return match _exp.chars().nth(0) {
-	    Some(')') => {
-		_exp = &_exp[1..];
-		Ok((nbr, _exp))
-	    },
-	    _ => Err(EvalExprError)
-	};
+        let nbr;
+        _exp = &_exp[1..];
+        match parse_sum(&_exp) {
+            Err(e) => return Err(e),
+            Ok((num, exp)) => {
+                nbr = num;
+                _exp = exp;
+            }
+        };
+        return match _exp.chars().nth(0) {
+            Some(')') => {
+                _exp = &_exp[1..];
+                Ok((nbr, _exp))
+            },
+            _ => Err(EvalExprError)
+        };
     }
     match parse_float(_exp) {
-	Err(e) => {
-	    Err(e)
-	},
-	Ok((num, exp)) => {
-	    Ok((num, exp))
-	}
+        Err(e) => {
+            Err(e)
+        },
+        Ok((num, exp)) => {
+            Ok((num, exp))
+        }
     }
 }
 
@@ -86,23 +71,23 @@ fn parse_sign(exp:&str, sign: bool) -> Result<(f64, &str), EvalExprError> {
     let mut new_sign = sign;
 
     match exp.chars().nth(0) {
-	None => return Err(EvalExprError),
-	Some(val) => next_char = val
+        None => return Err(EvalExprError),
+        Some(val) => next_char = val
     };
 
     if next_char == '-' {
-	new_sign = !sign;
+        new_sign = !sign;
     } else if next_char == '+' {
     } else {
-	return match parse_number(&exp) {
-	    Err(e) => Err(e),
-	    Ok((mut num, new_exp)) => {
-		if !new_sign {
-		    num = -num;
-		}
-		Ok((num, new_exp))
-	    }
-	}
+        return match parse_number(&exp) {
+            Err(e) => Err(e),
+            Ok((mut num, new_exp)) => {
+                if !new_sign {
+                    num = -num;
+                }
+                Ok((num, new_exp))
+            }
+        }
     }
     parse_sign(&exp[1..], new_sign)
 }
@@ -111,9 +96,9 @@ fn parse_pow(exp: &str) -> Result<(f64, &str), EvalExprError> {
     let mut a;
     let mut _exp;
     match parse_sign(exp, true) {
-	Err(e) => return Err(e),
-	Ok((num, new_exp)) => {
-	    a = num;
+        Err(e) => return Err(e),
+        Ok((num, new_exp)) => {
+            a = num;
             _exp = new_exp;
         }
     };
