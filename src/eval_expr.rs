@@ -111,5 +111,6 @@ fn parse_sum(exp: &str) -> (f32, &str) {
 }
 
 pub fn evaluate(exp: &str) -> f32 {
-    return parse_sum(&exp.replace(" ", "")[..]).0;
+    let res = parse_sum(&exp.replace(" ", "")[..]).0;
+    return (res * 100.).round() / 100.;
 }
