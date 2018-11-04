@@ -2,7 +2,15 @@ pub fn parse_float(exp: &str) -> (f32, &str) {
     let mut i = 0;
     let mut c = exp.chars().nth(i).unwrap();
     let mut keep: bool = true;
-    while keep && c.is_digit(10) || c == '.' || c == '-' {
+    let mut sign = 1_f32;
+    let mut minus = false;
+    if c == '-' {
+        sign = -1_f32;
+        i += 1;
+        c = exp.chars().nth(i).unwrap();
+        minus = true;
+    }
+    while keep && c.is_digit(10) || c == '.' {
         i = i + 1;
         let x = exp.chars().nth(i);
         if x.is_none() {
@@ -12,11 +20,18 @@ pub fn parse_float(exp: &str) -> (f32, &str) {
         }
     }
     let num_len = i;
-    let num_sclice = &exp[..num_len];
-    let num: f32 = num_sclice.parse().unwrap();
+    let num_slice: &str;
+    if minus == false {
+        num_slice = &exp[..num_len];
+    } else {
+        num_slice = &exp[1..num_len];
+    }
+    let num: f32 = num_slice.parse().unwrap();
     let rest_slice = &exp[num_len..];
-    return (num, rest_slice);
+    return (sign * num, rest_slice);
 }
+
+
 
 fn parse_number(exp: &str) -> (f32, &str) {
     let mut _exp = &exp[..];
@@ -25,7 +40,7 @@ fn parse_number(exp: &str) -> (f32, &str) {
         let (nbr, xp) = parse_sum(&_exp);
         let mut _exp = xp;
         if _exp.chars().nth(0).unwrap() == ')' {
-            _exp = &exp[1..];
+            _exp = &_exp[1..];
         }
         return (nbr, _exp);
     }
@@ -70,6 +85,7 @@ fn parse_sum(exp: &str) -> (f32, &str) {
         if op == '+' {
             a = a + b;
         } else {
+            println!("a = a - b : {} = {} - {}", a, a, b);
             a = a - b;
         }
     }
