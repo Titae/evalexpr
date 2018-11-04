@@ -49,8 +49,25 @@ fn parse_sign(exp:&str, sign: bool) -> (f32, &str) {
     return parse_sign(&exp[1..], new_sign);
 }
 
-fn parse_factors(exp: &str) -> (f32, &str) {
+fn parse_pow(exp: &str) -> (f32, &str) {
     let (a, _exp) = parse_sign(exp, true);
+    let mut _exp = _exp;
+    let mut a = a;
+    while _exp.is_empty() == false {
+        let op = _exp.chars().nth(0).unwrap();
+        if op != '^' {
+            return (a, _exp);
+        }
+        _exp = &_exp[1..];
+        let (b, new_exp) = parse_sign(_exp, true);
+        _exp = new_exp;
+        a = a.powf(b);
+    }
+    return (a, _exp);
+}
+
+fn parse_factors(exp: &str) -> (f32, &str) {
+    let (a, _exp) = parse_pow(exp);
     let mut _exp = _exp;
     let mut a = a;
     while _exp.is_empty() == false {
@@ -59,7 +76,7 @@ fn parse_factors(exp: &str) -> (f32, &str) {
             return (a, _exp);
         }
         _exp = &_exp[1..];
-        let (b, new_exp) = parse_sign(_exp, true);
+        let (b, new_exp) = parse_pow(_exp);
         _exp = new_exp;
         if op == '%' {
             a = a % b;
