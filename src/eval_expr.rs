@@ -20,9 +20,6 @@ pub fn parse_float(exp: &str) -> (f32, &str) {
 
 fn parse_number(exp: &str) -> (f32, &str) {
     let mut _exp = &exp[..];
-    while _exp.chars().nth(0).unwrap() == ' ' {
-        _exp = &_exp[1..];
-    }
     if _exp.chars().nth(0).unwrap() == '(' {
         _exp = &_exp[1..];
         let (nbr, xp) = parse_sum(&_exp);
@@ -40,9 +37,6 @@ fn parse_factors(exp: &str) -> (f32, &str) {
     let mut _exp = _exp;
     let mut a = a;
     while _exp.is_empty() == false {
-        while _exp.chars().nth(0).unwrap() == ' ' {
-            _exp = &_exp[1..];
-        }
         let op = _exp.chars().nth(0).unwrap();
         if op != '*' && op != '/' && op != '%' {
             return (a, _exp);
@@ -66,9 +60,6 @@ fn parse_sum(exp: &str) -> (f32, &str) {
     let mut a = a;
     let mut _exp = _exp;
     while _exp.len() > 0 {
-        while _exp.chars().nth(0).unwrap() == ' ' {
-            _exp = &_exp[1..];
-        }
         let op = _exp.chars().nth(0).unwrap();
         if op != '+' && op != '-' {
             return (a, _exp);
@@ -86,6 +77,5 @@ fn parse_sum(exp: &str) -> (f32, &str) {
 }
 
 pub fn evaluate(exp: &str) -> f32 {
-    let (res, _exp) = parse_sum(exp);
-    return res;
+    return parse_sum(&exp.replace(" ", "")[..]).0;
 }
