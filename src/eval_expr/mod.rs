@@ -150,6 +150,9 @@ fn parse_factors(exp: &str) -> Result<(f64, &str), EvalExprError> {
         a = if op == '%' {
             a % b
         } else if op == '/' {
+            if b == 0. {
+                return Err(EvalExprError);
+            }
             a / b
         } else {
             a * b

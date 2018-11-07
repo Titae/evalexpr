@@ -1,6 +1,5 @@
 [package]
 name = "fun_evalexpr"
 version = "0.1.0"
-authors = ["Vinchenzo Guibert <vinchenzo.guibert@epitech.eu>"]
-
+authors = ["Vinchenzo Guibert <vinchenzo.guibert@epitech.eu>", "Arthur Lemaire <arthur.lemaire@epitech.eu>"]
 [dependencies]
