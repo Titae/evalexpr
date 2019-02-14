@@ -7,8 +7,7 @@ fn print_usage() -> i32 {
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
-    let return_code = match args.len() {
-        2 => {
+    let return_code = if args.len() == 2 {
             let exp = &args[1];
             match eval_expr::evaluate(exp) {
                 Err(_) => {
@@ -20,9 +19,8 @@ fn main() {
 		    0
 		}
             }
-        },
-        //wrong argument number case
-        _ => print_usage()
+    } else {
+        print_usage()
     };
     std::process::exit(return_code);
 }

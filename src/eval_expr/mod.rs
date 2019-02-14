@@ -117,7 +117,11 @@ fn parse_pow(exp: &str) -> Result<(f64, &str), EvalExprError> {
                 _exp = new_exp;
             }
         };
-        a = a.powf(b);
+        a = if a < 0. {
+            -a.powf(b)
+        } else {
+            a.powf(b)
+        };
     }
     Ok((a, _exp))
 }

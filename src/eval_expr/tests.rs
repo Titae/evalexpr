@@ -64,5 +64,5 @@ fn pow_evaluate() {
     assert_eq!(2., evaluate("2^1").unwrap(), "2^1");
     assert_eq!(4., evaluate("2^2").unwrap(), "2^2");
     assert_eq!(-4., evaluate("-2^2").unwrap(), "-2^2");
-    assert_eq!(4., evaluate("-2^-2").unwrap(), "-2^-2");
+    assert_eq!(-0.25, evaluate("-2^-2").unwrap(), "-2^-2");
 }
